@@ -1,0 +1,1 @@
+- calibration_capture: Captures the images needed for calibration

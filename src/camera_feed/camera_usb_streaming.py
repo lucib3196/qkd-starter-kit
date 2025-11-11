@@ -20,7 +20,8 @@ async def frame_generator():
             b"--frame\r\n"
             b"Content-Type: image/jpeg\r\n\r\n" + buffer.tobytes() + b"\r\n"
         )
-        await asyncio.sleep(1/10)
+        # Frame rate
+        await asyncio.sleep(1 / 10)
     cap.release()
 
 

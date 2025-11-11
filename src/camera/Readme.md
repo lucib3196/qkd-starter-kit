@@ -1,1 +1,0 @@
-- camera_usb_basic: A simple script for opening up the camera and running, it does not work on SSHm the camera gui will pop up only on an actual setup
