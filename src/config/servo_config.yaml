@@ -1,0 +1,11 @@
+servos:
+  pan:
+    pin: 17
+    min_pulse_width: 0.0005
+    max_pulse_width: 0.0025
+    neutral: 0.0
+  tilt:
+    pin: 18
+    min_pulse_width: 0.0005
+    max_pulse_width: 0.0025
+    neutral: 0.0
