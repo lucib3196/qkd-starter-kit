@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from typing import Literal
 from pathlib import Path
-
+from src.camera_capture import picamera_capture, usb_capture
 
 camera_type = Literal["USB", "PiCamera"]
 
@@ -89,3 +89,11 @@ def get_basic_camera_info() -> CalibrationSettings:
 if __name__ == "__main__":
     settings = get_basic_camera_info()
     print("Calibration Settings Set OK")
+    if settings.camera_type == "USB":
+        print("Starting USB Capture")
+        usb_capture(settings.calibration_path)
+    elif settings.camera_type == "PiCamera":
+        print("Starting PIcamera Capture")
+        picamera_capture(settings.calibration_path)
+    else: 
+        raise ValueError("An error occured could not determine the camera settings")
