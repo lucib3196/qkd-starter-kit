@@ -1,7 +1,3 @@
-Here’s a cleaned-up and polished version of your README section 👇
-
----
-
 ## 🧩 Pin Layout and Servo Configuration Guide
 
 For reference on **GPIO pin layouts**, see the official GPIO Zero documentation:
