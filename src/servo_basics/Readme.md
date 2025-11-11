@@ -1,4 +1,4 @@
-## 🧩 Pin Layout and Servo Configuration Guide
+## Pin Layout and Servo Configuration Guide
 
 For reference on **GPIO pin layouts**, see the official GPIO Zero documentation:
 🔗 [GPIO Zero Pin Layouts](https://gpiozero.readthedocs.io/en/stable/recipes.html)
