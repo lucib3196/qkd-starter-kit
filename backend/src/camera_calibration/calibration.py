@@ -21,16 +21,10 @@ Outputs
 Dependencies: os, cv2, numpy, pickle
 """
 
-
-
-import os
 import cv2 as cv
 import numpy as np
 import pickle
-import argparse
 from pathlib import Path
-
-
 
 
 valid_paths = [".png", ".jpg",'.jpeg', '.bmp']
