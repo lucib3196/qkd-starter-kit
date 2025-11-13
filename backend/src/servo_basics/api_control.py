@@ -2,9 +2,10 @@ import uvicorn
 from gpiozero import Servo, Device
 from gpiozero.pins.pigpio import PiGPIOFactory
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from . import base_servo, tilt_servo
 from . import base_servo_settings, tilt_servo_settings
-
+from pydantic import BaseModel
 # Initialize FastAPI app
 app = FastAPI(title="Servo Control API")
 
@@ -51,17 +52,29 @@ def move_tilt_servo(angle: int):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-
+class MoveRequest(BaseModel):
+    base: int
+    tilt: int
+    
+    
 @app.post("/move/dual")
-def move(base: int, tilt: int):
+def move(move: MoveRequest):
     try:
-        tilt_val = move_tilt(tilt)
-        pan_val = move_pan(base)
+        tilt_val = move_tilt(move.tilt)
+        pan_val = move_pan(move.base)
         return {
             "message": f"Tilt Servo moved to {tilt_val}\n Base Servo moved to {pan_val}"
         }
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_credentials=True,  # Allow cookies and authentication headers to be sent
+    allow_methods=["*"],  # Allow all HTTP methods (GET, POST, PUT, DELETE, etc.)
+    allow_headers=["*"],  # Allow all headers in the request
+)
 
 
 # -------------------------------
