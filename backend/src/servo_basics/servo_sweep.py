@@ -1,6 +1,6 @@
 from gpiozero import Servo
 from time import sleep
-from src.config import servo_settings
+from src.servo_basics.config import servo_settings
 
 bs_settings = servo_settings.base_servo
 
