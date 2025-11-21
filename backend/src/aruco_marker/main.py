@@ -27,34 +27,39 @@ def main(source=0):
         ).start()
         print("Camera started")
 
+        # ArUco marker detection
+        ## The aruco marker must match a dict type
+        aruco_dict_type = cv2.aruco.DICT_6X6_250
+        aruco_dict = cv2.aruco.getPredefinedDictionary(aruco_dict_type)
+        parameters = cv2.aruco.DetectorParameters()
+
         while True:
             # Stop threads if either thread signals to stop
             if video_stream.stopped:
                 break
+            with video_stream.lock:
+                frame = (
+                    video_stream.frame.copy()
+                    if video_stream.frame is not None
+                    else None
+                )
+            if frame is None:
+                continue
 
-            frame = video_stream.frame
-            if frame is not None:
-                pass
-                # Optionally turn the image into a gray scale
-                # gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            # Optionally turn the image into a gray scale
+            # gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-                # ArUco marker detection
-                ## The aruco marker must match a dict type
-                aruco_dict_type = cv2.aruco.DICT_6X6_250
-                aruco_dict = cv2.aruco.getPredefinedDictionary(aruco_dict_type)
-                parameters = cv2.aruco.DetectorParameters()
-
-                markers = detect_markers(frame, aruco_dict, parameters)
-                if markers:
-                    for m in markers:
-                        with video_stream.lock:
-                            track_and_render_marker(
-                                video_stream.frame,
-                                m[0],
-                                m[1],
-                                video_stream.camera_matrix,
-                                video_stream.camera_dist,
-                            )
+            markers = detect_markers(frame, aruco_dict, parameters)
+            if markers:
+                for m in markers:
+                    track_and_render_marker(
+                        frame,
+                        m[0],
+                        m[1],
+                        video_stream.camera_matrix,
+                        video_stream.camera_dist,
+                    )
+            video_stream.frame = frame
             # Exit the loop if 'q' is pressed
             if cv2.waitKey(1) & 0xFF == ord("q"):
                 cv2.destroyAllWindows()

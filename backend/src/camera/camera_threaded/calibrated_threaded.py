@@ -63,8 +63,10 @@ class CalibratedThreadedStream:
         """Display frames continuously."""
         while not self.stopped:
             with self.lock:
-                if self.frame is not None:
-                    cv2.imshow("Video", self.frame)
+                frame = None if self.frame is None else self.frame.copy()
+
+            if frame is not None:
+                cv2.imshow("Video", frame)
 
             # Quit with q
             if cv2.waitKey(1) & 0xFF == ord("q"):
@@ -75,12 +77,15 @@ class CalibratedThreadedStream:
         Continuously grab frames from the video stream until stopped.
         """
         while not self.stopped:
-            if not self.grabbed:
-                self.grabbed.release()  # type: ignore
+            grabbed, frame = self.stream.read()
+            if not grabbed:
+                print("Frame grab failed — stopping stream.")
                 self.stop()
-            else:
-                with self.lock:
-                    self.grabbed, self.frame = self.stream.read()
+                break
+
+            with self.lock:
+                self.grabbed = grabbed
+                self.frame = frame
                 self.calibrate_camera()
                 self.undistort_frame()
 

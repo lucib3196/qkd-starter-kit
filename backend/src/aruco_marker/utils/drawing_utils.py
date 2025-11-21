@@ -90,6 +90,6 @@ def display_distance_marker(frame, marker_id, distance):
         (10, 30),
         cv2.FONT_HERSHEY_SIMPLEX,
         1,
-        (255, 255, 255),
+        (0, 0, 0),
         3,
     )
