@@ -1,14 +1,19 @@
 import cv2
 import cv2.aruco as aruco
-import time
+from cv2.typing import MatLike
 import numpy as np
 import math
+from cv2.aruco import DetectorParameters, Dictionary
+from typing import Sequence
+from typing import Tuple
 
 # Constants
 ARUCO_DICT_TYPE = cv2.aruco.DICT_6X6_250
 
 
-def find_marker(frame, aruco_dict, parameters):
+def detect_markers(
+    frame: MatLike, aruco_dict: Dictionary, parameters: DetectorParameters
+) -> Sequence[Tuple[Sequence[MatLike], int]] | None:
     """
     Detects ArUco markers in a given frame.
 
@@ -23,13 +28,12 @@ def find_marker(frame, aruco_dict, parameters):
     """
     detector = aruco.ArucoDetector(aruco_dict, parameters)
     markers, ids, _ = detector.detectMarkers(frame)
-
-    marker_arr = []
-    if ids is not None:
-        for marker_corner, marker_id in zip(markers, ids):
-            marker_arr.append((marker_corner, marker_id))
-
-    return marker_arr
+    if markers and ids is not None:
+        detected = []
+        for corners, marker_id in zip(markers, ids):
+            detected.append((corners, int(marker_id[0])))
+        return detected
+    return None
 
 
 def get_marker_coord(markers, point=0):

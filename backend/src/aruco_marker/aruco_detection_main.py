@@ -1,15 +1,7 @@
 import cv2
-import numpy as np
-from numpy.typing import NDArray
 from src.camera.camera_threaded import CalibratedThreadedStream, CalibrationSettings
-from .utils import find_marker, get_marker_coord, get_marker_center
+from .utils import detect_markers
 from pathlib import Path
-from typing import TypeAlias
-
-
-MatLike: TypeAlias = NDArray[np.uint8]
-# Constants
-aruco_dict_type = cv2.aruco.DICT_6X6_250
 
 
 def main(source=0):
@@ -37,25 +29,29 @@ def main(source=0):
             frame = video_stream.frame
             if frame is not None:
                 pass
-
-                # # Logic to display stuff
-                gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                # Optionally turn the image into a gray scale
+                # gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
                 # ArUco marker detection
+                ## The aruco marker must match a dict type
+                aruco_dict_type = cv2.aruco.DICT_6X6_250
                 aruco_dict = cv2.aruco.getPredefinedDictionary(aruco_dict_type)
                 parameters = cv2.aruco.DetectorParameters()
 
-                markers = find_marker(gray, aruco_dict, parameters)
-                for m in markers:
-                    print(m)
+                markers = detect_markers(frame, aruco_dict, parameters)
+                if markers:
+                    for m in markers:
+                        print(f"Found marker {m[0]} with id of {m[1]}")
 
             # Exit the loop if 'q' is pressed
             if cv2.waitKey(1) & 0xFF == ord("q"):
+                cv2.destroyAllWindows()
                 break
 
     except Exception as e:
         # Log or print the exception for debugging
         print(f"An error occurred: {e}")
+        cv2.destroyAllWindows()
 
     finally:
         # Clean up resources
