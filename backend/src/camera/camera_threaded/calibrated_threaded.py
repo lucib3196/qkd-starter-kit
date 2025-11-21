@@ -3,6 +3,7 @@ import cv2
 from src.camera.camera_utils import load_camera_calibration
 from pydantic import BaseModel
 from pathlib import Path
+from threading import Lock
 
 
 class CalibrationSettings(BaseModel):
@@ -45,6 +46,7 @@ class CalibratedThreadedStream:
 
         self.grabbed, self.frame = self.stream.read()
         self.stopped = False
+        self.lock = Lock()
 
     def start(self):
         """
@@ -60,8 +62,9 @@ class CalibratedThreadedStream:
     def show(self):
         """Display frames continuously."""
         while not self.stopped:
-            if self.frame is not None:
-                cv2.imshow("Video", self.frame)
+            with self.lock:
+                if self.frame is not None:
+                    cv2.imshow("Video", self.frame)
 
             # Quit with q
             if cv2.waitKey(1) & 0xFF == ord("q"):
@@ -76,7 +79,8 @@ class CalibratedThreadedStream:
                 self.grabbed.release()  # type: ignore
                 self.stop()
             else:
-                self.grabbed, self.frame = self.stream.read()
+                with self.lock:
+                    self.grabbed, self.frame = self.stream.read()
                 self.calibrate_camera()
                 self.undistort_frame()
 

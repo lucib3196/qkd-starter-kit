@@ -1,6 +1,6 @@
 import cv2
 from src.camera.camera_threaded import CalibratedThreadedStream, CalibrationSettings
-from .utils import detect_markers,get_marker_corners
+from .utils import detect_markers, get_marker_corners, get_marker_center
 from pathlib import Path
 
 
@@ -43,7 +43,19 @@ def main(source=0):
                     for m in markers:
                         print(f"Found marker {m[0]} with id of {m[1]}")
                         coord = get_marker_corners(m[0])
-                        print("These are the coord", coord)
+                        print("These are the marker corners", coord)
+                        center = get_marker_center(m[0])
+                        print("This is the center", center)
+                        with video_stream.lock:
+                            cv2.putText(
+                                video_stream.frame,
+                                "Hello",
+                                (50, 50),
+                                cv2.FONT_HERSHEY_SIMPLEX,
+                                1,
+                                (0, 255, 0),
+                                2,
+                            )
 
             # Exit the loop if 'q' is pressed
             if cv2.waitKey(1) & 0xFF == ord("q"):

@@ -8,12 +8,6 @@ from typing import Sequence
 from typing import Tuple
 
 
-
-
-
-
-
-
 def draw_corners_circ(frame, corners):
     """Draws a circle on the corner of a marker specifically the top left one
 
