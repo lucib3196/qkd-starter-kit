@@ -1,6 +1,11 @@
 import cv2
 from src.camera.camera_threaded import CalibratedThreadedStream, CalibrationSettings
-from .utils import detect_markers, get_marker_corners, get_marker_center
+from .utils import (
+    detect_markers,
+    get_marker_corners,
+    get_marker_center,
+    estimate_pose_and_transformation_matrix,
+)
 from pathlib import Path
 
 
@@ -46,8 +51,17 @@ def main(source=0):
                         print("These are the marker corners", coord)
                         center = get_marker_center(m[0])
                         print("This is the center", center)
-                        cv2.putText(video_stream.frame, "Hello", (50, 50), cv2.FONT_HERSHEY_SIMPLEX,
-                        1, (0, 255, 0), 2)
+                        cv2.putText(
+                            video_stream.frame,
+                            "Hello",
+                            (50, 50),
+                            cv2.FONT_HERSHEY_SIMPLEX,
+                            1,
+                            (0, 255, 0),
+                            2,
+                        )
+                        data = estimate_pose_and_transformation_matrix(m[0], video_stream.camera_matrix, video_stream.camera_dist)
+                        print(data)
 
             # Exit the loop if 'q' is pressed
             if cv2.waitKey(1) & 0xFF == ord("q"):

@@ -1,6 +1,12 @@
 import cv2
 from src.camera.camera_threaded import CalibratedThreadedStream, CalibrationSettings
-from .utils import detect_markers, get_marker_corners, get_marker_center
+from .utils import (
+    detect_markers,
+    get_marker_corners,
+    get_marker_center,
+    draw_corners_circ,
+    track_and_render_marker,
+)
 from pathlib import Path
 
 
@@ -41,22 +47,14 @@ def main(source=0):
                 markers = detect_markers(frame, aruco_dict, parameters)
                 if markers:
                     for m in markers:
-                        print(f"Found marker {m[0]} with id of {m[1]}")
-                        coord = get_marker_corners(m[0])
-                        print("These are the marker corners", coord)
-                        center = get_marker_center(m[0])
-                        print("This is the center", center)
                         with video_stream.lock:
-                            cv2.putText(
+                            track_and_render_marker(
                                 video_stream.frame,
-                                "Hello",
-                                (50, 50),
-                                cv2.FONT_HERSHEY_SIMPLEX,
-                                1,
-                                (0, 255, 0),
-                                2,
+                                m[0],
+                                m[1],
+                                video_stream.camera_matrix,
+                                video_stream.camera_dist,
                             )
-
             # Exit the loop if 'q' is pressed
             if cv2.waitKey(1) & 0xFF == ord("q"):
                 cv2.destroyAllWindows()
