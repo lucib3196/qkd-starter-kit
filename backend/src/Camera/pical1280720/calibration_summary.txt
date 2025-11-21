@@ -1,8 +1,0 @@
-Calibration Summary
-====================
-total_images: 56
-success_count: 4
-failure_count: 52
-warning: Less than 10 successful detections; calibration may be off.
-camera_matrix: [[1153.1014304034363, 0.0, 725.5592836239048], [0.0, 1069.0249925069072, 255.52893771632708], [0.0, 0.0, 1.0]]
-mean_reprojection_error: 0.04622084084705666

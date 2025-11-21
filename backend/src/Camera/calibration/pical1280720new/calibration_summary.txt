@@ -1,7 +1,0 @@
-Calibration Summary
-====================
-total_images: 75
-success_count: 25
-failure_count: 50
-camera_matrix: [[986.6652452701193, 0.0, 674.2786861283956], [0.0, 923.6333215424204, 346.47977304848683], [0.0, 0.0, 1.0]]
-mean_reprojection_error: 0.0795698716362358
