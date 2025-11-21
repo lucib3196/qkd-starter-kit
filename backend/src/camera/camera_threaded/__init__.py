@@ -1,2 +1,2 @@
-from .calibrated_threaded import CalibratedThreadedStream
+from .calibrated_threaded import CalibratedThreadedStream, CalibrationSettings
 from .threaded import ThreadedStream

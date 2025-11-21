@@ -19,7 +19,7 @@ from gpiozero.pins.pigpio import PiGPIOFactory
 
 # Custom modules (adjust relative import paths as needed)
 from ..Camera.pi_camera_streamer import CalibratedCamera, PiVideo
-from ..ArUcoMarker.utils import find_marker, track_and_render_marker, draw_center_frame
+from ..aruco_marker.utils import find_marker, track_and_render_marker, draw_center_frame
 from ..PID import PIDController
 
 # =======================

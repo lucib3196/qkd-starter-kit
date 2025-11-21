@@ -2,11 +2,13 @@ import cv2
 import cv2.aruco as aruco
 import time
 import numpy as np
-from . import WebcamVideoStreamThreaded, FPS, putIterationsPerSec, VideoShow
+from src.camera.camera_threaded import ThreadedStream
 import traceback
 import numpy
+
 # Constants
 aruco_dict_type = cv2.aruco.DICT_6X6_250
+
 
 def find_marker(frame, aruco_dict, parameters):
     """
@@ -30,6 +32,7 @@ def find_marker(frame, aruco_dict, parameters):
             marker_arr.append((marker_corner, marker_id))
 
     return marker_arr
+
 
 def get_corner_and_center(marker_corner):
     """
@@ -58,6 +61,7 @@ def get_corner_and_center(marker_corner):
 
     return [top_left, top_right, bottom_right, bottom_left, center]
 
+
 def draw_id(frame, coor, marker_id):
     """
     Draws the marker ID at the top-left corner of the marker on the frame.
@@ -79,6 +83,7 @@ def draw_id(frame, coor, marker_id):
     cv2.putText(frame, str(marker_id), top_right, font, font_scale, color, thickness)
     return frame
 
+
 def draw_square_frame(image_frame, coordinates):
     [top_left, top_right, bottom_right, bottom_left, center] = coordinates
     # Draw lines connecting the marker corners
@@ -86,11 +91,13 @@ def draw_square_frame(image_frame, coordinates):
     cv2.line(image_frame, top_right, bottom_right, (0, 255, 0), 2)
     cv2.line(image_frame, bottom_right, bottom_left, (0, 255, 0), 2)
     cv2.line(image_frame, bottom_left, top_left, (0, 255, 0), 2)
-    
-    cv2.circle(image_frame, center, 5, (255, 0, 255), cv2.FILLED) # Center dot 
-    
-    
-def estimate_marker_pose_single(frame, marker, camera_matrix, distortion_coeff, marker_id, marker_length=0.1):
+
+    cv2.circle(image_frame, center, 5, (255, 0, 255), cv2.FILLED)  # Center dot
+
+
+def estimate_marker_pose_single(
+    frame, marker, camera_matrix, distortion_coeff, marker_id, marker_length=0.1
+):
     """Estimate the pose of an ArUco marker and display its distance on the frame.
 
     Args:
@@ -106,7 +113,9 @@ def estimate_marker_pose_single(frame, marker, camera_matrix, distortion_coeff, 
     """
 
     # Estimate the pose of the marker
-    rvec, tvec, _ = cv2.aruco.estimatePoseSingleMarkers(marker, marker_length, camera_matrix, distortion_coeff)
+    rvec, tvec, _ = cv2.aruco.estimatePoseSingleMarkers(
+        marker, marker_length, camera_matrix, distortion_coeff
+    )
 
     # Calculate the distance to the marker in centimeters
     distance = np.linalg.norm(tvec) * 100  # Convert to cm
@@ -119,20 +128,25 @@ def estimate_marker_pose_single(frame, marker, camera_matrix, distortion_coeff, 
         cv2.FONT_HERSHEY_SIMPLEX,
         1,
         (255, 255, 255),
-        3
+        3,
     )
     return distance
-    
-def estimate_marker_pose_multiple(frame, marker_array, camera_matrix, distortion_coeff, marker_lenght = 0.1):
+
+
+def estimate_marker_pose_multiple(
+    frame, marker_array, camera_matrix, distortion_coeff, marker_lenght=0.1
+):
     all_text = ""
     for marker, marker_id in marker_array:
-        rvec, tvec, _ = cv2.aruco.estimatePoseSingleMarkers(marker, marker_lenght, camera_matrix, distortion_coeff)
+        rvec, tvec, _ = cv2.aruco.estimatePoseSingleMarkers(
+            marker, marker_lenght, camera_matrix, distortion_coeff
+        )
         distance = np.linalg.norm(tvec) * 100  # Convert to cm
         all_text += f"Marker: {marker_id}, Distance: {distance:.2f} cm \n"
-    print(all_text)    
-     # Display text on the frame
+    print(all_text)
+    # Display text on the frame
     y_off = 200  # Starting vertical position for the text
-    for line in all_text.split('\n'):
+    for line in all_text.split("\n"):
         if line.strip():  # Skip empty lines
             cv2.putText(
                 frame,
@@ -142,9 +156,10 @@ def estimate_marker_pose_multiple(frame, marker_array, camera_matrix, distortion
                 fontScale=0.5,
                 color=(0, 0, 0),
                 thickness=1,
-                lineType=cv2.LINE_AA
+                lineType=cv2.LINE_AA,
             )
             y_off += 20  # Add spacing between lines
+
 
 def draw_field(img, markers, ids, default_order=[1, 5, 10, 42]):
     """
@@ -169,7 +184,9 @@ def draw_field(img, markers, ids, default_order=[1, 5, 10, 42]):
                     index = ids.index(sorted_corner_id)
                     markers_sorted[idx] = markers[index]
                 else:
-                    raise ValueError(f"ID {sorted_corner_id} not found in detected IDs.")
+                    raise ValueError(
+                        f"ID {sorted_corner_id} not found in detected IDs."
+                    )
 
             contours = np.array(markers_sorted)
             overlay = img.copy()
@@ -186,6 +203,7 @@ def draw_field(img, markers, ids, default_order=[1, 5, 10, 42]):
         squarefound = False
 
     return img_new, squarefound
+
 
 def draw_rounder_corner(frame, coor):
     """
@@ -205,6 +223,7 @@ def draw_rounder_corner(frame, coor):
 
     cv2.circle(frame, top_left, radius, color, thickness)
     return frame
+
 
 def display_spec(img, marker_array):
     """
@@ -227,7 +246,13 @@ def display_spec(img, marker_array):
 
     x, y = 15, 30
     text_size = cv2.getTextSize(spec, font, font_scale, thickness)[0]
-    cv2.rectangle(img, (x - 5, y - text_size[1] - 5), (x + text_size[0] + 5, y + 5), (255, 255, 255), -1)
+    cv2.rectangle(
+        img,
+        (x - 5, y - text_size[1] - 5),
+        (x + text_size[0] + 5, y + 5),
+        (255, 255, 255),
+        -1,
+    )
     cv2.putText(img, spec, (x, y), font, font_scale, color, thickness)
 
     print(spec)
@@ -235,34 +260,40 @@ def display_spec(img, marker_array):
 
 
 def draw_bounded_area(frame, marker_array):
-    ordered_id = [1,5,10,42]
-    
-    all_corners = [(marker_id,get_corner_and_center(marker)[0]) for marker,marker_id in marker_array]
+    ordered_id = [1, 5, 10, 42]
+
+    all_corners = [
+        (marker_id, get_corner_and_center(marker)[0])
+        for marker, marker_id in marker_array
+    ]
     sorted_corners = sorted(
         all_corners,
-        key = lambda x: ordered_id.index(x[0]) if x[0] in ordered_id else float('inf')
+        key=lambda x: ordered_id.index(x[0]) if x[0] in ordered_id else float("inf"),
     )
     boundary = np.array([corner[1] for corner in sorted_corners])
-    reshaped_boundary = boundary.reshape((-1, 1, 2)) # reshape for opencv
-    
-    cv2.polylines(frame,[reshaped_boundary], isClosed=True, color = (255,0,255), thickness=3)
+    reshaped_boundary = boundary.reshape((-1, 1, 2))  # reshape for opencv
+
+    cv2.polylines(
+        frame, [reshaped_boundary], isClosed=True, color=(255, 0, 255), thickness=3
+    )
     cv2.fillPoly(frame, [reshaped_boundary], color=(0, 255, 0))  # Fill with green color
-    
+
     overlay = frame.copy()
     alpha = 0.75  # Transparency factor.
-        # Following line overlays transparent rectangle over the image
-    cv2.addWeighted(overlay, alpha, frame, 1 - alpha, 0)# 
-    
+    # Following line overlays transparent rectangle over the image
+    cv2.addWeighted(overlay, alpha, frame, 1 - alpha, 0)  #
+
     # Draw a cross line for each corner
-    cv2.line(frame, boundary[0], boundary[2],(255,255,255), thickness=1)
-    cv2.line(frame, boundary[1], boundary[3],(255,255,255), thickness=1)
-    
-    
+    cv2.line(frame, boundary[0], boundary[2], (255, 255, 255), thickness=1)
+    cv2.line(frame, boundary[1], boundary[3], (255, 255, 255), thickness=1)
+
     # Determine center point
-    x, y = determine_intersection_point(x=boundary[0], y=boundary[2], u=boundary[1], v=boundary[3])
+    x, y = determine_intersection_point(
+        x=boundary[0], y=boundary[2], u=boundary[1], v=boundary[3]
+    )
     x, y = int(x), int(y)
-    
-    print(x,y)
+
+    print(x, y)
 
     # Draw the circle
     cv2.circle(frame, center=(x, y), radius=3, color=(255, 255, 255), thickness=1)
@@ -296,7 +327,6 @@ def determine_intersection_point(x, y, u, v):
     # Return the first intersection point as a tuple
     return float(intersection[0]), float(y_val[0])
 
-    
 
 def main(src=1):
     """
@@ -308,54 +338,54 @@ def main(src=1):
     Returns:
         None
     """
-    
-    marker_hold = True # This just says to hold the marker position
-    
+
+    marker_hold = True  # This just says to hold the marker position
+
     try:
-        video_stream = WebcamVideoStreamThreaded(src).start()
-        video_display = VideoShow(video_stream.frame).start()
-        fps_counter = FPS().start()
+        video_stream = ThreadedStream(src).start()
+        video_stream.show()
 
         while True:
-            if video_stream.stopped or video_display.stopped:
+            if video_stream.stopped:
                 video_stream.stop()
-                video_display.stop()
                 break
 
             frame = video_stream.frame
             if frame is not None:
                 # gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-                # # Try to increase the contrast of the image requires more work 
+                # # Try to increase the contrast of the image requires more work
                 # clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
                 # gray = clahe.apply(gray)
-                gray=frame
-                
+                gray = frame
+
                 aruco_dict = cv2.aruco.getPredefinedDictionary(aruco_dict_type)
                 parameters = cv2.aruco.DetectorParameters()
 
                 marker_array = find_marker(frame, aruco_dict, parameters)
                 display_spec(gray, marker_array)
-                
 
                 if marker_array:
-                    estimate_marker_pose_multiple(frame,marker_array,camera_matrix=video_stream.camera_matrix, distortion_coeff=video_stream.camera_dist)
+                    estimate_marker_pose_multiple(
+                        frame,
+                        marker_array,
+                        camera_matrix=video_stream.camera_matrix,
+                        distortion_coeff=video_stream.camera_dist,
+                    )
 
-                    if len(marker_array)==4:
-                        draw_bounded_area(gray,marker_array)
-                        
-                    # Draw stuff on the marker for detection 
+                    if len(marker_array) == 4:
+                        draw_bounded_area(gray, marker_array)
+
+                    # Draw stuff on the marker for detection
                     for marker, id in marker_array:
                         coord = get_corner_and_center(marker)
                         draw_id(frame, coord, id)
                         draw_rounder_corner(frame, coord)
-                        draw_square_frame(frame,coordinates=coord)
-                        
-                        
+                        draw_square_frame(frame, coordinates=coord)
 
                 frame_with_fps = putIterationsPerSec(gray, fps_counter.fps())
                 video_display.frame = frame_with_fps
 
-                if cv2.waitKey(1) & 0xFF == ord('q'):
+                if cv2.waitKey(1) & 0xFF == ord("q"):
                     break
 
             fps_counter.update()
@@ -367,5 +397,6 @@ def main(src=1):
         video_display.stop()
         exit()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

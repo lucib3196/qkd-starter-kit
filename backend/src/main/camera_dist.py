@@ -2,7 +2,7 @@ import cv2
 import time
 import numpy as np
 # Import marker detection and camera feed utilities
-from ..ArUcoMarker.utils import find_marker, track_and_render_marker, draw_center_frame
+from ..aruco_marker.utils import find_marker, track_and_render_marker, draw_center_frame
 from . import WebcamVideoStreamThreaded, VideoShow
 
 ARUCO_DICT_TYPE = cv2.aruco.DICT_ARUCO_ORIGINAL

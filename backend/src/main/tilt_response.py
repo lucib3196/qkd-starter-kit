@@ -3,7 +3,7 @@ import time
 import numpy as np
 from gpiozero import Device, AngularServo
 from gpiozero.pins.pigpio import PiGPIOFactory
-from ..ArUcoMarker.utils import find_marker, track_and_render_marker, draw_center_frame
+from ..aruco_marker.utils import find_marker, track_and_render_marker, draw_center_frame
 from . import WebcamVideoStreamThreaded, VideoShow
 from ..PID import PIDController
 

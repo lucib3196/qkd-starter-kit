@@ -7,6 +7,7 @@ import math
 # Constants
 ARUCO_DICT_TYPE = cv2.aruco.DICT_6X6_250
 
+
 def find_marker(frame, aruco_dict, parameters):
     """
     Detects ArUco markers in a given frame.
@@ -29,6 +30,22 @@ def find_marker(frame, aruco_dict, parameters):
             marker_arr.append((marker_corner, marker_id))
 
     return marker_arr
+
+
+def get_marker_coord(markers, point=0):
+    """Get the coordinate points of a given marker
+
+    Args:
+        markers (_type_): the marker coordinates
+        ids (_type_): A list of ids
+        point (int, optional): _description_. Defaults to 0 which corresponds to first corner, 1 corresponds to 2nd corrner etc
+        which goes top left, top right, bottom right and bottom left
+    """
+    arr = []
+    for marker in markers:
+        arr.append([int(marker[0][point][0]), int(marker[0][point][1])])
+    return arr
+
 
 def get_corner_and_center(marker):
     """
@@ -55,7 +72,40 @@ def get_corner_and_center(marker):
 
     return [top_left, top_right, bottom_right, bottom_left, center]
 
-def estimatePoseAndTransformation(marker, camera_matrix, distortion_coeff, marker_length=0.1):
+
+def get_marker_center(marker):
+    # Get the corner to calculate the center
+    top_left, ids = get_marker_coord(marker,  point=0)
+    top_right, ids = get_marker_coord(marker,  point=1)
+    bottom_right, ids = get_marker_coord(marker, point=2)
+    bottom_left = get_marker_coord(marker,  point=4)
+    if top_left:
+        center_X = (
+            top_left[0][0] + top_right[0][0] + top_left[0][0] + top_right[0][0]
+        ) * 0.25
+        center_Y = (
+            top_left[0][1] + top_right[0][1] + top_left[0][1] + top_right[0][1]
+        ) * 0.25
+        marker_center = [[int(center_X), int(center_Y)]]
+    else:
+        marker_center = [[0, 0]]
+    return marker_center
+
+
+def draw_corners_circ(frame, corners):
+    """Draws a circle on the corner of a marker specifically the top left one
+
+    Args:
+        frame (_type_): _description_
+        corners (_type_): _description_
+    """
+    for corner in corners:
+        cv2.circle(frame, (corner[0], corner[1]), 10, (0, 255, 0), thickness=-1)
+
+
+def estimatePoseAndTransformation(
+    marker, camera_matrix, distortion_coeff, marker_length=0.1
+):
     """
     Estimates the pose of an ArUco marker and returns the transformation matrix along with its distance,
     rotation vector, and translation vector.
@@ -74,7 +124,9 @@ def estimatePoseAndTransformation(marker, camera_matrix, distortion_coeff, marke
             - tvec (numpy.ndarray): Translation vector.
     """
     # Estimate pose of the marker and get the transformation matrix
-    rvec, tvec, _ = cv2.aruco.estimatePoseSingleMarkers(marker, marker_length, camera_matrix, distortion_coeff)
+    rvec, tvec, _ = cv2.aruco.estimatePoseSingleMarkers(
+        marker, marker_length, camera_matrix, distortion_coeff
+    )
     R, _ = cv2.Rodrigues(rvec)
     # print(f"This is the marker length{marker_length}")
     transformation_matrix = np.hstack((R, tvec[0].T))
@@ -84,7 +136,10 @@ def estimatePoseAndTransformation(marker, camera_matrix, distortion_coeff, marke
     distance = np.linalg.norm(tvec) * 100
     return transformation_matrix, distance, rvec, tvec
 
-def track_and_render_marker(frame, marker, marker_id, camera_matrix, distortion_coefficient, marker_length):
+
+def track_and_render_marker(
+    frame, marker, marker_id, camera_matrix, distortion_coefficient, marker_length
+):
     """
     Tracks the marker and renders its square frame, axis, and ID on the frame.
 
@@ -106,10 +161,11 @@ def track_and_render_marker(frame, marker, marker_id, camera_matrix, distortion_
     )
     draw_square_frame(frame, marker_coordinates)
     draw_id(frame, marker_coordinates, marker_id)
-    display_distance_marker(frame,marker_id,distance)
-    cv2.drawFrameAxes(frame, camera_matrix, distortion_coefficient, rvec, tvec, marker_length)
+    display_distance_marker(frame, marker_id, distance)
+    cv2.drawFrameAxes(
+        frame, camera_matrix, distortion_coefficient, rvec, tvec, marker_length
+    )
     return transformation_matrix
-
 
 
 def draw_square_frame(frame, coordinates):
@@ -127,8 +183,9 @@ def draw_square_frame(frame, coordinates):
     cv2.line(frame, bottom_right, bottom_left, (0, 255, 0), 2)
     cv2.line(frame, bottom_left, top_left, (0, 255, 0), 2)
 
-    # Draw center dot    
+    # Draw center dot
     cv2.circle(frame, center, 5, (255, 0, 255), cv2.FILLED)
+
 
 def draw_id(frame, coordinates, marker_id):
     """
@@ -151,6 +208,7 @@ def draw_id(frame, coordinates, marker_id):
     cv2.putText(frame, str(marker_id), top_right, font, font_scale, color, thickness)
     return frame
 
+
 def display_distance_marker(frame, marker_id, distance):
     """
     Displays the marker ID and its distance on the frame.
@@ -167,25 +225,29 @@ def display_distance_marker(frame, marker_id, distance):
         cv2.FONT_HERSHEY_SIMPLEX,
         1,
         (255, 255, 255),
-        3
+        3,
     )
 
-    
-#------------Deprecated for now------------------#
 
-    
-def estimate_marker_pose_multiple(frame, marker_array, camera_matrix, distortion_coeff, marker_lenght = 0.1):
+# ------------Deprecated for now------------------#
+
+
+def estimate_marker_pose_multiple(
+    frame, marker_array, camera_matrix, distortion_coeff, marker_lenght=0.1
+):
     all_text = ""
     for marker, marker_id in marker_array:
-        rvec, tvec, _ = cv2.aruco.estimatePoseSingleMarkers(marker, marker_lenght, camera_matrix, distortion_coeff)
+        rvec, tvec, _ = cv2.aruco.estimatePoseSingleMarkers(
+            marker, marker_lenght, camera_matrix, distortion_coeff
+        )
         distance = np.linalg.norm(tvec) * 100  # Convert to cm
         all_text += f"Marker: {marker_id}, Distance: {distance:.2f} cm \n"
-    print(all_text)  
-    print(f'This is the orientation {rvec}')  
-    print(f'This is the translational vector {tvec}')
-     # Display text on the frame
+        print(all_text)
+        print(f"This is the orientation {rvec}")
+        print(f"This is the translational vector {tvec}")
+    # Display text on the frame
     y_off = 200  # Starting vertical position for the text
-    for line in all_text.split('\n'):
+    for line in all_text.split("\n"):
         if line.strip():  # Skip empty lines
             cv2.putText(
                 frame,
@@ -195,9 +257,10 @@ def estimate_marker_pose_multiple(frame, marker_array, camera_matrix, distortion
                 fontScale=0.5,
                 color=(0, 0, 0),
                 thickness=1,
-                lineType=cv2.LINE_AA
+                lineType=cv2.LINE_AA,
             )
             y_off += 20  # Add spacing between lines
+
 
 def draw_field(img, markers, ids, default_order=[1, 5, 10, 42]):
     """
@@ -222,7 +285,9 @@ def draw_field(img, markers, ids, default_order=[1, 5, 10, 42]):
                     index = ids.index(sorted_corner_id)
                     markers_sorted[idx] = markers[index]
                 else:
-                    raise ValueError(f"ID {sorted_corner_id} not found in detected IDs.")
+                    raise ValueError(
+                        f"ID {sorted_corner_id} not found in detected IDs."
+                    )
 
             contours = np.array(markers_sorted)
             overlay = img.copy()
@@ -239,6 +304,7 @@ def draw_field(img, markers, ids, default_order=[1, 5, 10, 42]):
         squarefound = False
 
     return img_new, squarefound
+
 
 def draw_rounder_corner(frame, coor):
     """
@@ -258,6 +324,7 @@ def draw_rounder_corner(frame, coor):
 
     cv2.circle(frame, top_left, radius, color, thickness)
     return frame
+
 
 def display_spec(img, marker_array):
     """
@@ -280,7 +347,13 @@ def display_spec(img, marker_array):
 
     x, y = 15, 30
     text_size = cv2.getTextSize(spec, font, font_scale, thickness)[0]
-    cv2.rectangle(img, (x - 5, y - text_size[1] - 5), (x + text_size[0] + 5, y + 5), (255, 255, 255), -1)
+    cv2.rectangle(
+        img,
+        (x - 5, y - text_size[1] - 5),
+        (x + text_size[0] + 5, y + 5),
+        (255, 255, 255),
+        -1,
+    )
     cv2.putText(img, spec, (x, y), font, font_scale, color, thickness)
 
     print(spec)
@@ -288,34 +361,40 @@ def display_spec(img, marker_array):
 
 
 def draw_bounded_area(frame, marker_array):
-    ordered_id = [1,5,10,42]
-    
-    all_corners = [(marker_id,get_corner_and_center(marker)[0]) for marker,marker_id in marker_array]
+    ordered_id = [1, 5, 10, 42]
+
+    all_corners = [
+        (marker_id, get_corner_and_center(marker)[0])
+        for marker, marker_id in marker_array
+    ]
     sorted_corners = sorted(
         all_corners,
-        key = lambda x: ordered_id.index(x[0]) if x[0] in ordered_id else float('inf')
+        key=lambda x: ordered_id.index(x[0]) if x[0] in ordered_id else float("inf"),
     )
     boundary = np.array([corner[1] for corner in sorted_corners])
-    reshaped_boundary = boundary.reshape((-1, 1, 2)) # reshape for opencv
-    
-    cv2.polylines(frame,[reshaped_boundary], isClosed=True, color = (255,0,255), thickness=3)
+    reshaped_boundary = boundary.reshape((-1, 1, 2))  # reshape for opencv
+
+    cv2.polylines(
+        frame, [reshaped_boundary], isClosed=True, color=(255, 0, 255), thickness=3
+    )
     cv2.fillPoly(frame, [reshaped_boundary], color=(0, 255, 0))  # Fill with green color
-    
+
     overlay = frame.copy()
     alpha = 0.75  # Transparency factor.
-        # Following line overlays transparent rectangle over the image
-    cv2.addWeighted(overlay, alpha, frame, 1 - alpha, 0)# 
-    
+    # Following line overlays transparent rectangle over the image
+    cv2.addWeighted(overlay, alpha, frame, 1 - alpha, 0)  #
+
     # Draw a cross line for each corner
-    cv2.line(frame, boundary[0], boundary[2],(255,255,255), thickness=1)
-    cv2.line(frame, boundary[1], boundary[3],(255,255,255), thickness=1)
-    
-    
+    cv2.line(frame, boundary[0], boundary[2], (255, 255, 255), thickness=1)
+    cv2.line(frame, boundary[1], boundary[3], (255, 255, 255), thickness=1)
+
     # Determine center point
-    x, y = determine_intersection_point(x=boundary[0], y=boundary[2], u=boundary[1], v=boundary[3])
+    x, y = determine_intersection_point(
+        x=boundary[0], y=boundary[2], u=boundary[1], v=boundary[3]
+    )
     x, y = int(x), int(y)
-    
-    print(x,y)
+
+    print(x, y)
 
     # Draw the circle
     cv2.circle(frame, center=(x, y), radius=3, color=(255, 255, 255), thickness=1)
@@ -349,6 +428,7 @@ def determine_intersection_point(x, y, u, v):
     # Return the first intersection point as a tuple
     return float(intersection[0]), float(y_val[0])
 
+
 def calc_dist(p1, p2):
     x1, y1 = p1
     x2, y2 = p2
@@ -357,15 +437,10 @@ def calc_dist(p1, p2):
 
 def correct_white_balance(frame):
     avg_gray = np.mean(frame)
-    correction_factor = 128/avg_gray
-    corrected_frame = np.clip(frame*correction_factor,0,255).astype(np.uint8)
+    correction_factor = 128 / avg_gray
+    corrected_frame = np.clip(frame * correction_factor, 0, 255).astype(np.uint8)
     return corrected_frame
+
 
 def draw_center_frame(frame, center):
     cv2.circle(frame, center, 5, (255, 0, 0), 4)
-    
-    
-
-    
-    
-    

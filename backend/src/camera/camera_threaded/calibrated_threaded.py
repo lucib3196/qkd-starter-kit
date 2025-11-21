@@ -53,8 +53,19 @@ class CalibratedThreadedStream:
         Returns:
         - self: The instance of the class to allow method chaining.
         """
-        self.video_thread = Thread(target=self.get, args=()).start()
+        Thread(target=self.get, args=(), daemon=True).start()
+        Thread(target=self.show, args=(), daemon=True).start()
         return self
+
+    def show(self):
+        """Display frames continuously."""
+        while not self.stopped:
+            if self.frame is not None:
+                cv2.imshow("Video", self.frame)
+
+            # Quit with q
+            if cv2.waitKey(1) & 0xFF == ord("q"):
+                self.stop()
 
     def get(self):
         """
