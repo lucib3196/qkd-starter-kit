@@ -1,8 +1,13 @@
 import cv2
+import numpy as np
+from numpy.typing import NDArray
 from src.camera.camera_threaded import CalibratedThreadedStream, CalibrationSettings
 from .utils import find_marker, get_marker_coord, get_marker_center
 from pathlib import Path
+from typing import TypeAlias
 
+
+MatLike: TypeAlias = NDArray[np.uint8]
 # Constants
 aruco_dict_type = cv2.aruco.DICT_6X6_250
 
@@ -30,7 +35,6 @@ def main(source=0):
                 break
 
             frame = video_stream.frame
-            print(frame, "This is the value of the frame")
             if frame is not None:
                 pass
 
@@ -42,12 +46,8 @@ def main(source=0):
                 parameters = cv2.aruco.DetectorParameters()
 
                 markers = find_marker(gray, aruco_dict, parameters)
-                print("Marker detection")
-                marker_arr = get_marker_coord(markers)
-                if marker_arr:
-                    for marker in marker_arr:
-                        center = get_marker_center(marker)
-                        print(center)
+                for m in markers:
+                    print(m)
 
             # Exit the loop if 'q' is pressed
             if cv2.waitKey(1) & 0xFF == ord("q"):

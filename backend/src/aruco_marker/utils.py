@@ -33,18 +33,29 @@ def find_marker(frame, aruco_dict, parameters):
 
 
 def get_marker_coord(markers, point=0):
-    """Get the coordinate points of a given marker
-
-    Args:
-        markers (_type_): the marker coordinates
-        ids (_type_): A list of ids
-        point (int, optional): _description_. Defaults to 0 which corresponds to first corner, 1 corresponds to 2nd corrner etc
-        which goes top left, top right, bottom right and bottom left
     """
-    arr = []
-    for marker in markers:
-        arr.append([int(marker[0][point][0]), int(marker[0][point][1])])
-    return arr
+    Extract (x, y) corner coordinates for ArUco markers.
+
+    markers: list of tuples: [(corners, ids), ...]
+    corners shape: (1, 4, 2)
+    ids shape: (1,)
+
+    point: which corner (0 = TL, 1 = TR, 2 = BR, 3 = BL)
+    """
+
+    coords = []
+    for corners, ids in markers:
+
+        # Flatten (1,4,2) → (4,2)
+        corners = corners[0]
+
+        # Extract x, y from the corner
+        x = int(corners[point][0])
+        y = int(corners[point][1])
+
+        coords.append((x, y))
+
+    return coords
 
 
 def get_corner_and_center(marker):
@@ -75,10 +86,10 @@ def get_corner_and_center(marker):
 
 def get_marker_center(marker):
     # Get the corner to calculate the center
-    top_left, ids = get_marker_coord(marker,  point=0)
-    top_right, ids = get_marker_coord(marker,  point=1)
+    top_left, ids = get_marker_coord(marker, point=0)
+    top_right, ids = get_marker_coord(marker, point=1)
     bottom_right, ids = get_marker_coord(marker, point=2)
-    bottom_left = get_marker_coord(marker,  point=4)
+    bottom_left = get_marker_coord(marker, point=4)
     if top_left:
         center_X = (
             top_left[0][0] + top_right[0][0] + top_left[0][0] + top_right[0][0]
