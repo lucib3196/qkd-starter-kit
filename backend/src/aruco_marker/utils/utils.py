@@ -7,106 +7,11 @@ from cv2.aruco import DetectorParameters, Dictionary
 from typing import Sequence
 from typing import Tuple
 
-# Constants
-ARUCO_DICT_TYPE = cv2.aruco.DICT_6X6_250
-
-
-def detect_markers(
-    frame: MatLike, aruco_dict: Dictionary, parameters: DetectorParameters
-) -> Sequence[Tuple[Sequence[MatLike], int]] | None:
-    """
-    Detects ArUco markers in a given frame.
-
-    Parameters:
-        frame (numpy.ndarray): The input frame (grayscale or color image) in which to detect ArUco markers.
-        aruco_dict (cv2.aruco.Dictionary): The ArUco dictionary to use for marker detection.
-        parameters (cv2.aruco.DetectorParameters): Detection parameters for the ArUco detector.
-
-    Returns:
-        list: A list of tuples, where each tuple contains the detected marker's corners and its ID.
-              Example: [((corner1, corner2, corner3, corner4), id), ...]
-    """
-    detector = aruco.ArucoDetector(aruco_dict, parameters)
-    markers, ids, _ = detector.detectMarkers(frame)
-    if markers and ids is not None:
-        detected = []
-        for corners, marker_id in zip(markers, ids):
-            detected.append((corners, int(marker_id[0])))
-        return detected
-    return None
 
 
 
 
-def get_marker_coord(markers, point=0):
-    """
-    Extract (x, y) corner coordinates for ArUco markers.
 
-    markers: list of tuples: [(corners, ids), ...]
-    corners shape: (1, 4, 2)
-    ids shape: (1,)
-
-    point: which corner (0 = TL, 1 = TR, 2 = BR, 3 = BL)
-    """
-
-    coords = []
-    for corners, ids in markers:
-
-        # Flatten (1,4,2) → (4,2)
-        corners = corners[0]
-
-        # Extract x, y from the corner
-        x = int(corners[point][0])
-        y = int(corners[point][1])
-
-        coords.append((x, y))
-
-    return coords
-
-
-def get_corner_and_center(marker):
-    """
-    Calculates the corner coordinates and center point of an ArUco marker.
-
-    Parameters:
-        marker (numpy.ndarray): The marker corners in an array that can be reshaped to (4, 2).
-
-    Returns:
-        list: A list containing tuples for the top-left, top-right, bottom-right, bottom-left corners,
-              and the center point of the marker.
-    """
-    corners_abcd = marker.reshape((4, 2))
-    top_left, top_right, bottom_right, bottom_left = corners_abcd
-
-    top_left = (int(top_left[0]), int(top_left[1]))
-    top_right = (int(top_right[0]), int(top_right[1]))
-    bottom_right = (int(bottom_right[0]), int(bottom_right[1]))
-    bottom_left = (int(bottom_left[0]), int(bottom_left[1]))
-
-    center_x = (top_left[0] + top_right[0] + bottom_right[0] + bottom_left[0]) // 4
-    center_y = (top_left[1] + top_right[1] + bottom_right[1] + bottom_left[1]) // 4
-    center = (center_x, center_y)
-
-    return [top_left, top_right, bottom_right, bottom_left, center]
-
-
-def get_marker_center(marker):
-    # Get the corner to calculate the center
-    top_left, ids = get_marker_coord(marker, point=0)
-    top_right, ids = get_marker_coord(marker, point=1)
-    bottom_right, ids = get_marker_coord(marker, point=2)
-    bottom_left = get_marker_coord(marker, point=4)
-    if top_left:
-        center_X = (
-            top_left[0][0] + top_right[0][0] + top_left[0][0] + top_right[0][0]
-        ) * 0.25
-        center_Y = (
-            top_left[0][1] + top_right[0][1] + top_left[0][1] + top_right[0][1]
-        ) * 0.25
-        marker_center = [[int(center_X), int(center_Y)]]
-    else:
-        marker_center = [[0, 0]]
-    return marker_center
 
 
 def draw_corners_circ(frame, corners):
