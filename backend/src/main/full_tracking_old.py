@@ -1,6 +1,6 @@
 import cv2
 ## Import Utilitis Marker Detection and Camera Feed
-from ..ArUcoMarker.utils import (
+from ..aruco_marker.utils import (
     find_marker,
     track_and_render_marker, draw_center_frame
 )
