@@ -1,0 +1,221 @@
+import cv2
+import numpy as np
+import math
+from typing import Tuple, Sequence
+
+
+# ------------Deprecated for now------------------#
+
+
+def estimate_marker_pose_multiple(
+    frame, marker_array, camera_matrix, distortion_coeff, marker_lenght=0.1
+):
+    all_text = ""
+    for marker, marker_id in marker_array:
+        rvec, tvec, _ = cv2.aruco.estimatePoseSingleMarkers(
+            marker, marker_lenght, camera_matrix, distortion_coeff
+        )
+        distance = np.linalg.norm(tvec) * 100  # Convert to cm
+        all_text += f"Marker: {marker_id}, Distance: {distance:.2f} cm \n"
+        print(all_text)
+        print(f"This is the orientation {rvec}")
+        print(f"This is the translational vector {tvec}")
+    # Display text on the frame
+    y_off = 200  # Starting vertical position for the text
+    for line in all_text.split("\n"):
+        if line.strip():  # Skip empty lines
+            cv2.putText(
+                frame,
+                text=line,
+                org=(10, y_off),
+                fontFace=cv2.FONT_HERSHEY_SIMPLEX,
+                fontScale=0.5,
+                color=(0, 0, 0),
+                thickness=1,
+                lineType=cv2.LINE_AA,
+            )
+            y_off += 20  # Add spacing between lines
+
+
+def draw_field(img, markers, ids, default_order=[1, 5, 10, 42]):
+    """
+    Draws a quadrilateral on the image based on marker positions.
+
+    Parameters:
+        img (numpy.ndarray): The input image.
+        markers (list): List of marker corner coordinates.
+        ids (list): List of marker IDs corresponding to the markers.
+        default_order (list): List of IDs defining the desired order of corners.
+
+    Returns:
+        tuple: (img_new, squarefound)
+            img_new (numpy.ndarray): Image with the quadrilateral drawn.
+            squarefound (bool): Whether a quadrilateral was successfully drawn.
+    """
+    if len(markers) == 4:
+        markers_sorted = [None] * 4
+        try:
+            for idx, sorted_corner_id in enumerate(default_order):
+                if sorted_corner_id in ids:
+                    index = ids.index(sorted_corner_id)
+                    markers_sorted[idx] = markers[index]
+                else:
+                    raise ValueError(
+                        f"ID {sorted_corner_id} not found in detected IDs."
+                    )
+
+            contours = np.array(markers_sorted)
+            overlay = img.copy()
+            cv2.fillPoly(overlay, pts=[contours], color=(255, 215, 0))
+            alpha = 0.4
+            img_new = cv2.addWeighted(overlay, alpha, img, 1 - alpha, 0)
+            squarefound = True
+        except ValueError as e:
+            print(f"Error: {e}")
+            img_new = img
+            squarefound = False
+    else:
+        img_new = img
+        squarefound = False
+
+    return img_new, squarefound
+
+
+def draw_rounder_corner(frame, coor):
+    """
+    Draws a circle at the top-left corner of the marker.
+
+    Parameters:
+        frame (numpy.ndarray): The input frame.
+        coor (list): A list of corner coordinates, where coor[0] is the top-left corner.
+
+    Returns:
+        numpy.ndarray: The frame with the circle drawn.
+    """
+    top_left = coor[0]
+    radius = 5
+    color = (255, 0, 0)
+    thickness = -1
+
+    cv2.circle(frame, top_left, radius, color, thickness)
+    return frame
+
+
+def display_spec(img, marker_array):
+    """
+    Displays the number of markers found on the given image.
+
+    Parameters:
+        img (numpy.ndarray): The image where the text will be displayed.
+        marker_array (list): A list of detected markers.
+
+    Returns:
+        numpy.ndarray: The image with the text displayed.
+    """
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    thickness = 1
+    font_scale = 0.5
+    color = (0, 0, 0)
+
+    amount_marker = len(marker_array)
+    spec = f"{amount_marker} markers found."
+
+    x, y = 15, 30
+    text_size = cv2.getTextSize(spec, font, font_scale, thickness)[0]
+    cv2.rectangle(
+        img,
+        (x - 5, y - text_size[1] - 5),
+        (x + text_size[0] + 5, y + 5),
+        (255, 255, 255),
+        -1,
+    )
+    cv2.putText(img, spec, (x, y), font, font_scale, color, thickness)
+
+    print(spec)
+    return img
+
+
+def draw_bounded_area(frame, marker_array):
+    ordered_id = [1, 5, 10, 42]
+
+    all_corners = [
+        (marker_id, get_corner_and_center(marker)[0])
+        for marker, marker_id in marker_array
+    ]
+    sorted_corners = sorted(
+        all_corners,
+        key=lambda x: ordered_id.index(x[0]) if x[0] in ordered_id else float("inf"),
+    )
+    boundary = np.array([corner[1] for corner in sorted_corners])
+    reshaped_boundary = boundary.reshape((-1, 1, 2))  # reshape for opencv
+
+    cv2.polylines(
+        frame, [reshaped_boundary], isClosed=True, color=(255, 0, 255), thickness=3
+    )
+    cv2.fillPoly(frame, [reshaped_boundary], color=(0, 255, 0))  # Fill with green color
+
+    overlay = frame.copy()
+    alpha = 0.75  # Transparency factor.
+    # Following line overlays transparent rectangle over the image
+    cv2.addWeighted(overlay, alpha, frame, 1 - alpha, 0)  #
+
+    # Draw a cross line for each corner
+    cv2.line(frame, boundary[0], boundary[2], (255, 255, 255), thickness=1)
+    cv2.line(frame, boundary[1], boundary[3], (255, 255, 255), thickness=1)
+
+    # Determine center point
+    x, y = determine_intersection_point(
+        x=boundary[0], y=boundary[2], u=boundary[1], v=boundary[3]
+    )
+    x, y = int(x), int(y)
+
+    print(x, y)
+
+    # Draw the circle
+    cv2.circle(frame, center=(x, y), radius=3, color=(255, 255, 255), thickness=1)
+    return frame
+
+
+def determine_intersection_point(x, y, u, v):
+    """
+    Determine the intersection point of two lines defined by points (x, y) and (u, v).
+    """
+    # Fit lines to points x,y and u,v
+    coefficients1 = np.polyfit(x, y, 1)  # Line 1: y = m1*x + c1
+    coefficients2 = np.polyfit(u, v, 1)  # Line 2: y = m2*x + c2
+
+    polynomial1 = np.poly1d(coefficients1)
+    polynomial2 = np.poly1d(coefficients2)
+
+    # Difference between the two polynomials
+    diff = polynomial1 - polynomial2
+
+    # Find roots (intersection points)
+    intersection = np.roots(diff)
+
+    # Check for no intersection or invalid result
+    if len(intersection) == 0:
+        raise ValueError("The lines do not intersect or are parallel.")
+
+    # Evaluate y-value at the intersection point
+    y_val = polynomial1(intersection)
+
+    # Return the first intersection point as a tuple
+    return float(intersection[0]), float(y_val[0])
+
+
+def calc_dist(p1, p2):
+    x1, y1 = p1
+    x2, y2 = p2
+    return math.hypot(x1 - x2, y1 - y2)
+
+
+def correct_white_balance(frame):
+    avg_gray = np.mean(frame)
+    correction_factor = 128 / avg_gray
+    corrected_frame = np.clip(frame * correction_factor, 0, 255).astype(np.uint8)
+    return corrected_frame
+
+
+def draw_center_frame(frame, center):
+    cv2.circle(frame, center, 5, (255, 0, 0), 4)

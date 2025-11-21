@@ -83,7 +83,7 @@ def get_basic_camera_info() -> CalibrationSettings:
         print("Invalid choice. Please select from the listed options.")
 
     # Step 4: Return configuration
-    return CalibrationSettings(calibration_path=camera_folder, camera_type=camera)
+    return CalibrationSettings(calibration_path=camera_folder, camera_type=camera) # type: ignore
 
 
 if __name__ == "__main__":

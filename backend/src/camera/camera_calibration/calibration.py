@@ -43,9 +43,10 @@ def calibrate_camera(calibration_images: str|Path,calibration_output: str|Path )
     objpoints = []
     imgpoints = []
     
-    debug_folder = Path(calibration_output)/"debug"
-    success_folder = Path(calibration_output)/"success"
-    failure_folder = Path(calibration_output)/"failure"
+    debug_folder = (Path(calibration_output)/"debug").resolve()
+    success_folder = (Path(calibration_output)/"success").resolve()
+    failure_folder = (Path(calibration_output)/"failure").resolve()
+    calibration_output = Path(calibration_output)
     
     folders = [debug_folder, success_folder, failure_folder]
     for f in folders:
@@ -95,6 +96,8 @@ def calibrate_camera(calibration_images: str|Path,calibration_output: str|Path )
         summary["warning"] = "Less than 10 successful detections; calibration may be off."
     if objpoints:
         ret, mtx, dist, rvecs, tvecs = cv.calibrateCamera(objpoints, imgpoints, gray.shape[::-1], None, None)
+        
+        
         
         calibration_file = calibration_output/"calibration.pkl"
         camera_matrix_file = calibration_output/"cameraMatrix.pkl"
