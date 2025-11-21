@@ -36,6 +36,8 @@ def detect_markers(
     return None
 
 
+
+
 def get_marker_coord(markers, point=0):
     """
     Extract (x, y) corner coordinates for ArUco markers.
