@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from typing import Literal
 from pathlib import Path
-from src.camera_capture import picamera_capture, usb_capture
+from src.camera.camera_capture import picamera_capture, usb_capture
 
 camera_type = Literal["USB", "PiCamera"]
 

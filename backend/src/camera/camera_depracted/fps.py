@@ -23,6 +23,7 @@ Usage:
 This module can be imported and used as part of a video processing pipeline to track and display performance metrics.
 """
 
+
 class FPS:
     """
     A class for measuring frames per second (FPS) in video processing tasks.
@@ -64,7 +65,8 @@ class FPS:
         Returns:
         - float: Elapsed time in seconds.
         """
-        return (datetime.datetime.now() - self._start).total_seconds()
+        return (datetime.datetime.now() - self._start).total_seconds() # type: ignore
+
 
     def fps(self):
         """
