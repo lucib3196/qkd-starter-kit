@@ -39,7 +39,7 @@ class CalibratedThreadedStream:
             calibration_settings.camera_matrix_path,
             calibration_settings.camera_distortion_path,
         )
-
+        self.calibrate_camera()
         self.grabbed, self.frame = self.stream.read()
         self.stopped = False
         self.lock = Lock()
@@ -82,7 +82,7 @@ class CalibratedThreadedStream:
             with self.lock:
                 self.grabbed = grabbed
                 self.frame = frame
-                self.calibrate_camera()
+                
                 self.undistort_frame()
 
     def stop(self):

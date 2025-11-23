@@ -1,5 +1,8 @@
 import cv2
-from src.camera.camera_threaded import CalibratedThreadedStream, CalibrationSettings
+from src.camera.camera_threaded.models import CalibrationSettings
+from src.camera.camera_threaded.get_video_threaded import VideoGetCalibrated, VideoShow
+from src.fps.fps import putIterationsPerSec, FPS
+
 from .utils import (
     detect_markers,
     get_marker_corners,
@@ -21,9 +24,9 @@ def main(source=0):
         settings = CalibrationSettings(
             camera_matrix_path=matrix, camera_distortion_path=distortion
         )
-        video_stream = CalibratedThreadedStream(
-            source, calibration_settings=settings
-        ).start()
+        video_stream = VideoGetCalibrated(source, calibration_settings=settings).start()
+        video_show = VideoShow(video_stream.frame).start()
+        fps = FPS().start()
         print("Camera started")
 
         while True:
@@ -64,6 +67,10 @@ def main(source=0):
                             m[0], video_stream.camera_matrix, video_stream.camera_dist
                         )
                         print(data)
+                        
+                video_show.frame = frame
+                putIterationsPerSec(frame, fps.fps())
+                fps.update()
 
             # Exit the loop if 'q' is pressed
             if cv2.waitKey(1) & 0xFF == ord("q"):

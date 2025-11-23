@@ -2,6 +2,9 @@ from threading import Thread
 import cv2
 from src.fps.fps import putIterationsPerSec, FPS
 from cv2.typing import MatLike
+from .models import CalibrationSettings
+from src.camera.camera_utils import load_camera_calibration
+from threading import Lock
 
 
 class VideoGet:
@@ -24,6 +27,78 @@ class VideoGet:
     def stop(self):
         self.stopped = True
         return self
+
+
+class VideoGetCalibrated:
+    def __init__(self, src=0, calibration_settings: CalibrationSettings | None = None):
+        self.stream = cv2.VideoCapture(src)
+
+        self.stopped = False
+
+        if not self.stream.isOpened():
+            print("Error: Unable to access the camera.")
+            exit()
+        self.frame_width = self.stream.get(cv2.CAP_PROP_FRAME_WIDTH)
+        self.frame_height = self.stream.get(cv2.CAP_PROP_FRAME_HEIGHT)
+
+        if not calibration_settings:
+            raise ValueError("Calibration settings must be set")
+
+        self.camera_matrix, self.camera_dist = load_camera_calibration(
+            calibration_settings.camera_matrix_path,
+            calibration_settings.camera_distortion_path,
+        )
+
+        
+        self.grabbed, self.frame = self.stream.read()
+        self.calibrate_camera()
+        self.lock = Lock()
+        
+    def start(self):
+        self.thread = Thread(target=self.get, args=(),daemon=True).start()
+        return self
+
+    def get(self):
+        while not self.stopped:
+            if not self.grabbed:
+                self.stop()
+                break
+            else:
+                with self.lock:
+                    (self.grabbed, self.frame) = self.stream.read()
+                    self.undistort_frame()
+
+    def stop(self):
+        """
+        Stop the video stream thread by setting the stopped flag to True.
+        """
+        self.stopped = True
+
+    def calibrate_camera(self):
+        """
+        Calculate the optimal new camera matrix for undistortion.
+        """
+        height, width = self.frame.shape[:2]
+        self.new_camera_mtx, self.roi = cv2.getOptimalNewCameraMatrix(
+            self.camera_matrix,
+            self.camera_dist,
+            (width, height),
+            1,
+            (width, height),
+        )
+        self.width = width
+        self.height = height
+        return self
+
+    def undistort_frame(self):
+        """
+        Apply undistortion to the current frame and crop the result.
+        """
+        undistorted_frame = cv2.undistort(
+            self.frame, self.camera_matrix, self.camera_dist, None, self.new_camera_mtx
+        )
+        x, y, w, h = self.roi
+        self.undistorted_frame = undistorted_frame[y : y + h, x : x + w]
 
 
 class VideoShow:
@@ -71,5 +146,3 @@ def threaded_video_get(source=0):
 
 if __name__ == "__main__":
     threaded_video_get()
-
-

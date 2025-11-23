@@ -2,16 +2,19 @@ from pathlib import Path
 from threading import Thread
 from contextlib import asynccontextmanager
 import time
+
 import cv2
+import numpy as np
 import uvicorn
-from src.camera.camera_threaded import CalibrationSettings
+
 from fastapi import FastAPI
 from fastapi.responses import StreamingResponse, HTMLResponse
-import numpy as np
-from src.fps.fps import putIterationsPerSec, FPS
+
+from src.aruco_marker.utils import *
+from src.camera.camera_threaded import CalibrationSettings
 from src.camera.camera_threaded.get_video_threaded import VideoGetCalibrated
 from src.controls.pid import PIDController
-from .utils import detect_markers, track_and_render_marker
+from src.fps.fps import putIterationsPerSec, FPS
 
 
 # Create the pid and tilt controllers
