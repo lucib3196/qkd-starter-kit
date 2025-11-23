@@ -12,7 +12,7 @@ from gpiozero import Device, AngularServo
 # Configure gpiozero to use the PiGPIOFactory
 from gpiozero.pins.pigpio import PiGPIOFactory
 Device.pin_factory = PiGPIOFactory()
-from ..PID import PIDController
+from ..controls.PID import PIDController
 #Constants 
 ARUCO_DICT_TYPE = cv2.aruco.DICT_ARUCO_ORIGINAL
 MARKER_LENGTH = 0.046 # Meter

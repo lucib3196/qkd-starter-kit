@@ -60,7 +60,9 @@ def main(source=0):
                             (0, 255, 0),
                             2,
                         )
-                        data = estimate_pose_and_transformation_matrix(m[0], video_stream.camera_matrix, video_stream.camera_dist)
+                        data = estimate_pose_and_transformation_matrix(
+                            m[0], video_stream.camera_matrix, video_stream.camera_dist
+                        )
                         print(data)
 
             # Exit the loop if 'q' is pressed

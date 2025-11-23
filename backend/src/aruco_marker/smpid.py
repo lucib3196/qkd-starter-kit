@@ -34,7 +34,7 @@ from .utils import (
     draw_center_frame,
     calc_dist
 )
-from ..PID import PIDController
+from ..controls.PID import PIDController
 
 # Logging Configuration
 # This sets the logging level, determining the lowest level of messages that will be logged.

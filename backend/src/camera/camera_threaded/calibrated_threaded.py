@@ -1,14 +1,10 @@
 from threading import Thread
 import cv2
 from src.camera.camera_utils import load_camera_calibration
-from pydantic import BaseModel
-from pathlib import Path
 from threading import Lock
+from .models import CalibrationSettings
 
 
-class CalibrationSettings(BaseModel):
-    camera_matrix_path: str | Path
-    camera_distortion_path: str | Path
 
 
 class CalibratedThreadedStream:
