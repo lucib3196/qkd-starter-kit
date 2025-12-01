@@ -27,7 +27,7 @@ def main(source=0):
         video_stream = VideoGetCalibrated(source, calibration_settings=settings).start()
         video_show = VideoShow(video_stream.frame).start()
         fps = FPS().start()
-        print("Camera started")
+        print("Camera started ")
 
         while True:
             # Stop threads if either thread signals to stop
