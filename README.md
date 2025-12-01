@@ -1,78 +1,129 @@
-# QKD Senior Design
 
-## Getting Started
+---
 
+# Getting Started
 
-1. **Create a virtual environment**  
-   ```bash
-   python3 -m venv venv
-   source venv/bin/activate
-   ```
+## 1. Enter the Backend Directory
 
-2. Install required packages
+```bash
+cd backend
+```
+
+## 2. Create and Activate a Virtual Environment
+
+```bash
+python3 -m venv venv
+source venv/bin/activate
+```
+
+## 3. Install Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-Thought for a couple of seconds
+---
+
+# Project Structure
+
+## Camera Module
+
+Modules for capturing, processing, and streaming video using **PiCamera2** or **USB webcams**.
+
+* **camera_calibration**
+  Tools & scripts for camera calibration, including calibration image capture.
+
+* **camera_capture**
+  General-purpose capture module supporting both PiCamera and USB camera input.
+
+* **camera_deprecated**
+  Old camera code kept for reference; includes the legacy threaded PiCamera implementation.
+
+* **camera_feed**
+  Examples showing how to locally stream camera output or expose it via a FastAPI endpoint.
+
+* **camera_threaded**
+  Main camera implementation using threads for improved performance; supports calibration settings.
+
+* **camera_utils**
+  Utility functions shared across camera modules.
+
+---
+
+##  ARUCO Marker Detection
+
+* **base**
+  Basic ArUco marker detection using a *local* USB camera feed.
+
+* **base_stream**
+  Experimental version of `base` that works with streamed video input.
+
+* **main**
+  Concise wrapper implementation of the ArUco detection pipeline.
+
+> Other ArUco-related scripts are outdated and should be cleaned up or removed.
+
+---
+
+## Controls
+
+* **PID**
+  A reusable PID controller class used for servo alignment, tracking, and general control loops.
+
+---
+
+##  Mocking
+
+* **mock_picamera**
+  A fake PiCamera class used to avoid import errors when developing on non-Raspberry Pi systems.
+
+---
+
+## 🛠️ PiControl (Legacy)
+
+* Older collection of scripts for tracking and servo control.
+  Will be reorganized and merged into the updated main tracking workflow.
+
+---
+
+## Main Tracking System
+
+Current versions of the tracking logic, including servo integration.
+
+* **stream_tracking**
+  Full streaming-based tracker with servo initialization and closed-loop control.
+
+* **tracking**
+  Local webcam-based tracking implementation for PC-based testing.
+
+---
+
+## Servo Basics
+
+Example scripts demonstrating how to initialize and drive servos.
 
 
 
-## Project Structure
+---
 
-### Camera System
-
-Modules for capturing and streaming images/video from PiCamera2 or USB webcams.
-
-* `capture_image_pi`
-  Capture a single image with the Raspberry Pi Camera.
-* `calibration_image_capture`
-  Grab frames for calibration from USB or PiCamera (save with `s`/`c`, exit with `Esc` or `q`).
-* `calibration.py`
-  Process calibration images → compute camera matrix & distortion coeffs → save pickle files & report.
-* `pi_streamtest`
-  Serve raw PiCamera video over HTTP via Flask.
-* `camera_streamer`
-  Load calibration data, undistort PiCamera frames, and stream via Flask.
-
-> **Deprecated**
->
-> * `threaded_video_capture` – legacy webcam capture with FPS overlay.
-
-### Face Tracking
+## Face Tracking
 
 Real-time face detection and streaming through Flask.
 
-* `picamera_facedetection`
-  Detect faces on PiCamera feed, overlay annotations, and stream over HTTP.
+* **picamera_facedetection**
+  Detects faces from PiCamera, overlays annotations, and streams via HTTP.
 
-### Servo Control
+---
 
-Scripts for testing pan-tilt servos.
+## Servo Control Tests
 
-* `servo_test`
-  Move servos to their min/max angles.
-* `servo_test2`
-  Sweep servos continuously between endpoints.
+Scripts for quickly verifying servo motion.
 
-### ARuco Marker Detection
+* **servo_test**
+  Moves servos to their min/max angles.
 
-Detect ARuco markers, apply PID pan-tilt control, and log data.
-
-* `vs_motion`
-  Stream video, use PID to adjust pan/tilt for marker tracking, log errors to CSV.
-* `full_tracking_usb` *(legacy)*
-  USB-camera ARuco tracking + pan/tilt PID + CSV logging.
-* `utils`
-  Helper functions for marker detection, ID lookup, and pose estimation.
-
-### PID Control
-
-Generic PID controller for motion and servo adjustments.
-
-* `PID`
-  Class implementing Kp/Ki/Kd control loops.
+* **servo_test2**
+  Continuously sweeps servos between angle limits.
 
 ---
 
@@ -92,6 +143,5 @@ Generic PID controller for motion and servo adjustments.
 
 * [gpiozero documentation](https://gpiozero.readthedocs.io/en/stable/)
 * [OpenCV](https://opencv.org/)
-
 ```
 
