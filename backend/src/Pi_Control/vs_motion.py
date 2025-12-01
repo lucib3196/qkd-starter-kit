@@ -32,7 +32,7 @@ from picamera2 import Picamera2
 from ..Camera.fps import FPS, putIterationsPerSec
 # Import custom modules
 from ..aruco_marker.utils import find_marker, track_and_render_marker, draw_center_frame
-from ..PID import PIDController
+from ..controls.PID import PIDController
 from ..Camera.pi_camera_streamer import CalibratedCamera, PiVideo
 import time
 

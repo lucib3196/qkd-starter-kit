@@ -1,18 +1,34 @@
 import cv2
 import time
 import numpy as np
-# Import marker detection and camera feed utilities
+from gpiozero import Device, AngularServo
+from gpiozero.pins.pigpio import PiGPIOFactory
 from ..aruco_marker.utils import find_marker, track_and_render_marker, draw_center_frame
-from . import WebcamVideoStreamThreaded, VideoShow
+from ..main import WebcamVideoStreamThreaded, VideoShow
+from ..controls.PID import PIDController
+
+Device.pin_factory = PiGPIOFactory()
 
 ARUCO_DICT_TYPE = cv2.aruco.DICT_ARUCO_ORIGINAL
 MARKER_LENGTH = 0.046  # meters
 
+# Pan servo limits and pin
+PAN_MIN = -90
+PAN_MAX = 90
+PAN_SERVO_PIN = 17
+
+# Initialize pan servo (500µs to 2500µs pulse width)
+pan_servo = AngularServo(PAN_SERVO_PIN, min_angle=PAN_MIN, max_angle=PAN_MAX,
+                         min_pulse_width=0.5/1000, max_pulse_width=2.5/1000)
+
+# Initialize pan PID controller with gain 1 (Kp=1, Ki=0, Kd=0)
+pan_controller = PIDController(Kp=0.5, Ki=0, Kd=0.5)
+
 def main(src=0):
-    print("Starting Camera Calibration Mode (No Control)")
+    print("Starting Pan-Only Tracking")
     start_time = time.time()
-    # Data columns: Time, Pan_Error (deg), Tilt_Error (deg), tvec_x, tvec_y, tvec_z
-    data_array = np.empty((0, 6))
+    # Data columns: Time, Pan_Error (deg), Pan_Angle
+    data_array = np.empty((0, 3))
     
     video_stream = WebcamVideoStreamThreaded(src).start()
     video_display = VideoShow(video_stream.frame).start()
@@ -25,7 +41,7 @@ def main(src=0):
             frame = video_stream.frame
             if frame is None:
                 continue
-            
+
             frame_height, frame_width = frame.shape[:2]
             center = (frame_width // 2, frame_height // 2)
             draw_center_frame(frame, center)
@@ -47,15 +63,21 @@ def main(src=0):
                     tvec = transformation_matrix[:-1, -1]
                     x, y, z = tvec
                     
-                    # Compute error angles for calibration
+                    # Calculate pan error (in degrees)
                     pan_error_rad = np.arctan2(x, z)
                     pan_error_deg = np.degrees(pan_error_rad)
-                    tilt_error_rad = np.arctan2(y, z)
-                    tilt_error_deg = np.degrees(tilt_error_rad)
                     
-                    # Log calibration data
-                    data_entry = np.array([[elapsed_time, np.abs(pan_error_deg), np.abs(tilt_error_deg),
-                                            x, y, z]])
+                    current_pan = pan_servo.angle if pan_servo.angle is not None else 0
+                    
+                    # Compute correction using the pan PID controller
+                    pan_correction = pan_controller.update_PD(pan_error_deg)
+                    new_pan = current_pan - pan_correction
+                    new_pan = np.clip(new_pan, PAN_MIN, PAN_MAX)
+                    
+                    pan_servo.angle = new_pan
+                    
+                    # Log time, absolute error, and new pan angle
+                    data_entry = np.array([[elapsed_time, np.abs(pan_error_deg), new_pan]])
                     data_array = np.vstack((data_array, data_entry))
             
             video_display.frame = frame
@@ -66,9 +88,9 @@ def main(src=0):
         video_stream.stop()
         video_display.stop()
         cv2.destroyAllWindows()
-        np.savetxt("data_calib.csv", data_array, delimiter=",",
-                   header="Time,Pan_Error,Tilt_Error,tvec_x,tvec_y,tvec_z", comments="", fmt="%.5f")
-        print("Data saved to data_calib.csv")
+        np.savetxt("data_pan.csv", data_array, delimiter=",",
+                   header="Time,Pan_Error,Pan_Angle", comments="", fmt="%.5f")
+        print("Data saved to data_pan.csv")
 
 if __name__ == "__main__":
     main()
