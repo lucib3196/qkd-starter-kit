@@ -83,7 +83,7 @@ def get_basic_camera_info() -> CalibrationSettings:
         print("Invalid choice. Please select from the listed options.")
 
     # Step 4: Return configuration
-    return CalibrationSettings(calibration_path=camera_folder, camera_type=camera) # type: ignore
+    return CalibrationSettings(calibration_path=camera_folder, camera_type=camera)  # type: ignore
 
 
 if __name__ == "__main__":
@@ -95,5 +95,5 @@ if __name__ == "__main__":
     elif settings.camera_type == "PiCamera":
         print("Starting PIcamera Capture")
         picamera_capture(settings.calibration_path)
-    else: 
+    else:
         raise ValueError("An error occured could not determine the camera settings")
