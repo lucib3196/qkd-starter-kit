@@ -67,7 +67,7 @@ def main(source=0):
                             m[0], video_stream.camera_matrix, video_stream.camera_dist
                         )
                         print(data)
-                        
+
                 video_show.frame = frame
                 putIterationsPerSec(frame, fps.fps())
                 fps.update()
